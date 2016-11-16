@@ -2,7 +2,9 @@
 # APSstats.py - Extracts statistics data from ASP NP14 log files.
 
 import csv
-from datetime import datetime, date
+import matplotlib.pyplot as plt
+from datetime import datetime
+
 
 filePath = 'testlog.csv'
 with open(filePath, newline='') as csvfile:
@@ -84,15 +86,23 @@ print('Import of data from csv source file', filePath, 'done!')
 print('Total of', len(datastat), ' entries (rows) have been imported.')
 
 
-def list_by_user(id, since=datetime(2015, 1, 1), till=datetime.now(), data=datastat):
+def list_by_user(userid, since=datetime(2015, 1, 1), till=datetime.now(), data=datastat):
     """Return a list of entries from given list of dictionaries for selected user (card ID) and within selected time period.
     Default time period is between 1.1.2015 and today."""
     result = []
     for item in data:
         # print(item)
-        if (item['carID'] == id) and (since <= item['dttimeeventcreated'] <= till):
+        if (item['carID'] == userid) and (since <= item['dttimeeventcreated'] <= till):
             result.append(item)
     return result
+
+
+def plot_events_for_period(since=datetime(2015, 1, 1), till=datetime.now(), data=datastat):
+    """Creates (bar) chart showing number of operations per day during selected time period.
+    Default time period is between 1.1.2015 and today."""
+    datelist = [x for x in range(since, till)]
+    eventsnum = []
+
 
 id = input('Enter user (car) ID number: ')
 print('List of operations by user ID:', id)
