@@ -1,13 +1,12 @@
 #! python3
 # APSstats.py - Extracts statistics data from ASP NP14 log files.
 
-import csv
-import re
+import csv, re, os
 import matplotlib.pyplot as plt
 from datetime import datetime, date, timedelta
 
 datastat = []  # main stats data list of dictionaries
-files = ['testlog.csv']
+files = [x for x in os.listdir() if x.endswith('.log')]
 # files = ['7-2016-05.log', '7-2016-06.log']
 num_regex = re.compile(r'(\d*),(\d*),(\d*)')
 for f in files:
@@ -83,13 +82,20 @@ for f in files:
                     'user_timein': '',
                     'user_parkout': ''
                 })
-            print('1 entry (event) appended to list')
-            print(datastat[-1])
+            # print('1 entry (event) appended to list')
+            # print(datastat[-1])
 
 num1 = len(datastat)
-datastat = [dict(tupleized) for tupleized in set(tuple(item.items()) for item in datastat)]
+# datastat = [dict(tupleized) for tupleized in set(tuple(item.items()) for item in datastat)]
+# remove duplicate records considering only certain comments
+for i in range(len(datastat)):
+    if datastat[i]['outflag'] in datastat[i+1:]['outflag'] and \
+        datastat[i]['carID'] in datastat[i+1:]['carID'] and \
+        datastat[i]['dttimeswipe'] in datastat[i+1:]['dttimeswipe']:
+            del datastat[i]
 num2 = len(datastat)
-print('Import of data from source file(s)', ', '.join(files), 'done!')
+num3 = len(files)
+print('Import of data from', num3, 'source file(s)', ', '.join(files), 'done!')
 print('Total number of', num1, ' entries have been imported from log files. After removal of', num1 - num2,
       'duplicate(s) there are', num2, 'entries in database.')
 
@@ -169,5 +175,7 @@ while do.lower() != 'q':
     elif do == '2':
         id = input('Enter user (car) ID number: ')
         print('List of operations by user ID:', id)
-        print(list_by_user(id))
+        lst = sorted(list_by_user(id), key=lambda k: k['dttimeswipe']) # returns sorted list of dicts
+        for item in lst:
+            print('\t', item['dttimeswipe'])
 print('Thank you for using APS stats, bye bye!')
