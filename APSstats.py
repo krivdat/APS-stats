@@ -1,13 +1,14 @@
 #! python3
 # APSstats.py - Extracts statistics data from ASP NP14 log files.
 
-import csv, re, os
+import csv
+import re
+import os
 import matplotlib.pyplot as plt
 from datetime import datetime, date, timedelta
 
 datastat = []  # main stats data list of dictionaries
 files = [x for x in os.listdir() if x.endswith('.log')]
-# files = ['7-2016-05.log', '7-2016-06.log']
 num_regex = re.compile(r'(\d*),(\d*),(\d*)')
 for f in files:
     with open(f, newline='') as csvfile:
@@ -87,12 +88,18 @@ for f in files:
 
 num1 = len(datastat)
 # datastat = [dict(tupleized) for tupleized in set(tuple(item.items()) for item in datastat)]
-# remove duplicate records considering only certain comments
-for i in range(len(datastat)):
-    if datastat[i]['outflag'] in datastat[i+1:]['outflag'] and \
-        datastat[i]['carID'] in datastat[i+1:]['carID'] and \
-        datastat[i]['dttimeswipe'] in datastat[i+1:]['dttimeswipe']:
-            del datastat[i]
+# remove duplicate records considering only certain keys (columns)
+i = 0
+while i < len(datastat)-1:
+    j = i + 1
+    while j < len(datastat):
+        if (datastat[j]['outflag'] == datastat[i]['outflag'] and
+                datastat[j]['carID'] == datastat[i]['carID'] and
+                datastat[j]['dttimeswipe'] == datastat[i]['dttimeswipe']):
+            del datastat[j]
+        else:
+            j += 1
+    i += 1
 num2 = len(datastat)
 num3 = len(files)
 print('Import of data from', num3, 'source file(s)', ', '.join(files), 'done!')
@@ -111,9 +118,9 @@ def list_by_user(userid, since=datetime(2015, 1, 1), till=datetime.now(), data=d
     return result
 
 
-def date_range (start, end):
+def date_range(start, end):
     r = (end - start).days + 1
-    datelist = [start + timedelta(days=i) for i in range (r)]
+    datelist = [start + timedelta(days=i) for i in range(r)]
     return datelist
 
 
@@ -154,7 +161,7 @@ def plot_occupancy_for_period(since=date(2015, 1, 1), till=date.today(), data=da
     occup_tot = [occup_f0[i]+occup_f1[i]+occup_f2[i] for i in range(len(occup_f0))]  # list with number of occupied places total for each day in range - for axis y
     # print(dates)
     # print(eventsnum)
-    plt.bar(dates, eventsnum, label='Number of operations per day')
+    plt.bar(dates, occup_tot, label='Number of operations per day')
     plt.xlabel('dates')
     plt.ylabel('no. of operations')
     plt.title('No. of operations per day\nbetween ' + since.strftime('%d.%m.%y') + ' and ' + till.strftime('%d.%m.%y'))
@@ -175,7 +182,7 @@ while do.lower() != 'q':
     elif do == '2':
         id = input('Enter user (car) ID number: ')
         print('List of operations by user ID:', id)
-        lst = sorted(list_by_user(id), key=lambda k: k['dttimeswipe']) # returns sorted list of dicts
+        lst = sorted(list_by_user(id), key=lambda k: k['dttimeswipe'])  # returns sorted list of dicts
         for item in lst:
             print('\t', item['dttimeswipe'])
 print('Thank you for using APS stats, bye bye!')
